@@ -2,8 +2,19 @@
 
 from __future__ import annotations
 
-from data.loader import load_budgets, load_policies, load_vendors
+from data import loader
 from models import PurchaseRequest
+
+
+def _error_result(message: str, error_type: str) -> dict[str, object]:
+    """Return a consistent typed error payload for policy compliance failures."""
+    return {
+        "status": "error",
+        "error_type": error_type,
+        "tool": "check_policy_compliance",
+        "message": message,
+        "violations": [],
+    }
 
 
 def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
@@ -24,15 +35,15 @@ def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
           (``"deny"`` or ``"escalate"``).
     """
     try:
-        policies = load_policies()
-        vendors = load_vendors()
-        budgets = load_budgets()
+        policies = loader.load_policies()
+        vendors = loader.load_vendors()
+        budgets = loader.load_budgets()
     except FileNotFoundError as exc:
-        return {
-            "status": "error",
-            "message": f"Policy data unavailable: {exc}",
-            "violations": [],
-        }
+        return _error_result(f"Policy data unavailable: {exc}", "file_not_found")
+    except KeyError as exc:
+        return _error_result(f"Policy data missing expected field: {exc}", "key_error")
+    except Exception as exc:  # pragma: no cover - defensive guardrail
+        return _error_result(f"Unexpected policy data error: {exc}", "unexpected_error")
 
     policy_by_id = {policy["policy_id"]: policy for policy in policies}
     required_ids = {
@@ -46,27 +57,21 @@ def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
         "POL-008",
     }
     if set(policy_by_id) != required_ids:
-        return {
-            "status": "error",
-            "message": "Policy dataset must contain exactly POL-001 through POL-008",
-            "violations": [],
-        }
+        return _error_result(
+            "Policy dataset must contain exactly POL-001 through POL-008",
+            "validation_error",
+        )
 
     vendor = next((v for v in vendors if v.get("vendor_id") == request.vendor_id), None)
     if vendor is None:
-        return {
-            "status": "error",
-            "message": f"Unknown vendor_id: {request.vendor_id}",
-            "violations": [],
-        }
+        return _error_result(f"Unknown vendor_id: {request.vendor_id}", "validation_error")
 
     budget = next((b for b in budgets if b.get("cost_center_id") == request.cost_center_id), None)
     if budget is None:
-        return {
-            "status": "error",
-            "message": f"Unknown cost_center_id: {request.cost_center_id}",
-            "violations": [],
-        }
+        return _error_result(
+            f"Unknown cost_center_id: {request.cost_center_id}",
+            "validation_error",
+        )
 
     violations: list[dict[str, str]] = []
 

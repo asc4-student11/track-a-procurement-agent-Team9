@@ -2,9 +2,25 @@
 
 from __future__ import annotations
 
-from data.loader import load_vendors
+from data import loader
 
 POL001_THRESHOLD = 25_000.0
+
+
+def _error_result(message: str, error_type: str) -> dict[str, object]:
+    """Return a consistent typed error payload for vendor duplication failures."""
+    return {
+        "status": "error",
+        "error_type": error_type,
+        "tool": "check_vendor_duplication",
+        "message": message,
+        "has_conflict": False,
+        "conflicting_vendor_ids": [],
+        "conflicting_contract_details": [],
+        "policy_id": None,
+        "threshold_applied": None,
+        "forced_decision": None,
+    }
 
 
 def check_vendor_duplication(
@@ -36,43 +52,23 @@ def check_vendor_duplication(
         - forced_decision: "deny" when threshold-triggered violation exists, else None
     """
     if total_amount < 0:
-        return {
-            "status": "error",
-            "message": "total_amount must be greater than or equal to zero",
-            "has_conflict": False,
-            "conflicting_vendor_ids": [],
-            "conflicting_contract_details": [],
-            "policy_id": None,
-            "threshold_applied": None,
-            "forced_decision": None,
-        }
+        return _error_result(
+            "total_amount must be greater than or equal to zero",
+            "validation_error",
+        )
 
     try:
-        vendors = load_vendors()
+        vendors = loader.load_vendors()
     except FileNotFoundError as exc:
-        return {
-            "status": "error",
-            "message": f"Vendor data unavailable: {exc}",
-            "has_conflict": False,
-            "conflicting_vendor_ids": [],
-            "conflicting_contract_details": [],
-            "policy_id": None,
-            "threshold_applied": None,
-            "forced_decision": None,
-        }
+        return _error_result(f"Vendor data unavailable: {exc}", "file_not_found")
+    except KeyError as exc:
+        return _error_result(f"Vendor data missing expected field: {exc}", "key_error")
+    except Exception as exc:  # pragma: no cover - defensive guardrail
+        return _error_result(f"Unexpected vendor data error: {exc}", "unexpected_error")
 
     requested_vendor = next((v for v in vendors if v.get("vendor_id") == vendor_id), None)
     if requested_vendor is None:
-        return {
-            "status": "error",
-            "message": f"Unknown vendor_id: {vendor_id}",
-            "has_conflict": False,
-            "conflicting_vendor_ids": [],
-            "conflicting_contract_details": [],
-            "policy_id": None,
-            "threshold_applied": None,
-            "forced_decision": None,
-        }
+        return _error_result(f"Unknown vendor_id: {vendor_id}", "validation_error")
 
     conflicts = [
         vendor
