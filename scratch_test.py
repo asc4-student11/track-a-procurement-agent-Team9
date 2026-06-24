@@ -30,15 +30,15 @@ async def main() -> None:
     deterministic = evaluate_request(req)
     print("deterministic:", deterministic.model_dump())
 
-    # Optional LLM path if ANTHROPIC_API_KEY is configured.
-    if os.getenv("ANTHROPIC_API_KEY"):
+    # Optional LLM path if OPENAI_API_KEY is configured.
+    if os.getenv("OPENAI_API_KEY"):
         prompt = (
             "Evaluate this purchase request and return ProcurementRecommendation: "
             f"{req.model_dump_json()}"
         )
         try:
             result = await agent.run(prompt)
-            print("llm:", result.data.model_dump())
+            print("llm:", result.output.model_dump())
         except Exception as exc:  # pragma: no cover - scratch-only behavior
             print("llm call failed:", exc)
 
