@@ -3,7 +3,7 @@
 These tests run the full agent against sample requests and verify that the
 decision and rationale fields meet the acceptance criteria.
 
-Requires a valid ANTHROPIC_API_KEY in .env (or environment).
+Requires a valid OPENAI_API_KEY in .env (or environment).
 """
 
 from __future__ import annotations
@@ -39,7 +39,7 @@ async def test_approve_req001() -> None:
         total_amount=24_000.00,
     )
     result = await agent.run(str(req))
-    rec: ProcurementRecommendation = result.data
+    rec: ProcurementRecommendation = result.output
     assert rec.decision == "approve", f"Expected approve, got {rec.decision}: {rec.rationale}"
     assert rec.rationale.strip(), "Rationale must not be empty"
     assert rec.request_id == "REQ-001"
@@ -61,7 +61,7 @@ async def test_deny_budget_overage_req006() -> None:
         total_amount=11_200.00,
     )
     result = await agent.run(str(req))
-    rec: ProcurementRecommendation = result.data
+    rec: ProcurementRecommendation = result.output
     assert rec.decision == "deny", f"Expected deny, got {rec.decision}: {rec.rationale}"
     assert rec.rationale.strip()
 
@@ -82,7 +82,7 @@ async def test_deny_policy_catering_req009() -> None:
         total_amount=2_550.00,
     )
     result = await agent.run(str(req))
-    rec: ProcurementRecommendation = result.data
+    rec: ProcurementRecommendation = result.output
     assert rec.decision == "deny", f"Expected deny, got {rec.decision}: {rec.rationale}"
     assert rec.rationale.strip()
     # Rationale should reference the policy
@@ -107,7 +107,7 @@ async def test_escalate_compliance_flag_req011() -> None:
         total_amount=35_000.00,
     )
     result = await agent.run(str(req))
-    rec: ProcurementRecommendation = result.data
+    rec: ProcurementRecommendation = result.output
     assert rec.decision == "escalate", f"Expected escalate, got {rec.decision}: {rec.rationale}"
     assert rec.rationale.strip()
     assert any(
@@ -135,7 +135,7 @@ async def test_deny_expired_contract_req007() -> None:
         total_amount=5_400.00,
     )
     result = await agent.run(str(req))
-    rec: ProcurementRecommendation = result.data
+    rec: ProcurementRecommendation = result.output
     assert rec.decision == "deny"
     assert rec.rationale.strip()
 
@@ -156,7 +156,7 @@ async def test_deny_single_source_violation_req008() -> None:
         total_amount=28_500.00,
     )
     result = await agent.run(str(req))
-    rec: ProcurementRecommendation = result.data
+    rec: ProcurementRecommendation = result.output
     assert rec.decision == "deny"
     assert rec.rationale.strip()
 
@@ -177,7 +177,7 @@ async def test_escalate_near_director_threshold_req014() -> None:
         total_amount=47_500.00,
     )
     result = await agent.run(str(req))
-    rec: ProcurementRecommendation = result.data
+    rec: ProcurementRecommendation = result.output
     assert rec.decision == "escalate"
     assert rec.rationale.strip()
 
@@ -199,6 +199,6 @@ async def test_recommendation_always_has_request_id(  # noqa: PT004
         total_amount=8_500.00,
     )
     result = await agent.run(str(req))
-    rec: ProcurementRecommendation = result.data
+    rec: ProcurementRecommendation = result.output
     assert rec.request_id == "REQ-003"
     assert rec.rationale.strip()
