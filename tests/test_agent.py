@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import data.loader
+
 from agent import evaluate_request
 from data.loader import load_requests
 from models import PurchaseRequest
@@ -51,3 +53,18 @@ def test_agent_precedence_escalate_over_deny_req010() -> None:
     result = evaluate_request(_request_by_id("REQ-010"))
 
     assert result.decision == "escalate"
+
+
+def test_agent_escalates_when_budget_data_load_fails(monkeypatch) -> None:
+    """Budget loader failures must surface in rationale and force escalation."""
+
+    def _raise_file_not_found() -> list[dict[str, object]]:
+        raise FileNotFoundError("mock budgets.json missing")
+
+    monkeypatch.setattr(data.loader, "load_budgets", _raise_file_not_found)
+
+    result = evaluate_request(_request_by_id("REQ-001"))
+
+    assert result.decision == "escalate"
+    assert "data unavailable" in result.rationale.lower()
+    assert "budget" in result.rationale.lower()

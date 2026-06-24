@@ -6,7 +6,7 @@ requires-python = ">=3.11"
 
 dependencies = [
     "pydantic-ai>=0.0.14",
-    "anthropic>=0.40",
+    "openai>=1.0",
     "pydantic>=2.0",
     "python-dotenv>=1.0",
 ]
