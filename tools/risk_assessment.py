@@ -2,26 +2,9 @@
 
 from __future__ import annotations
 
-from data import loader
+from data.loader import load_vendors
 
 _ALLOWED_RISK_LEVELS = {"low", "medium", "high", "critical"}
-
-
-def _error_result(
-    message: str,
-    error_type: str,
-    risk_level: str = "critical",
-) -> dict[str, object]:
-    """Return a consistent typed error payload for risk assessment failures."""
-    return {
-        "status": "error",
-        "error_type": error_type,
-        "tool": "assess_risk",
-        "message": message,
-        "compliance_flag": False,
-        "contract_status": "unknown",
-        "risk_level": risk_level,
-    }
 
 
 def assess_risk(vendor_id: str) -> dict[str, object]:
@@ -39,21 +22,25 @@ def assess_risk(vendor_id: str) -> dict[str, object]:
         - risk_level: one of low/medium/high/critical
     """
     try:
-        vendors = loader.load_vendors()
+        vendors = load_vendors()
     except FileNotFoundError as exc:
-        return _error_result(f"Vendor data unavailable: {exc}", "file_not_found")
-    except KeyError as exc:
-        return _error_result(f"Vendor data missing expected field: {exc}", "key_error")
-    except Exception as exc:  # pragma: no cover - defensive guardrail
-        return _error_result(f"Unexpected vendor data error: {exc}", "unexpected_error")
+        return {
+            "status": "error",
+            "message": f"Vendor data unavailable: {exc}",
+            "compliance_flag": False,
+            "contract_status": "unknown",
+            "risk_level": "critical",
+        }
 
     vendor = next((item for item in vendors if item.get("vendor_id") == vendor_id), None)
     if vendor is None:
-        return _error_result(
-            f"Unknown vendor_id: {vendor_id}",
-            "validation_error",
-            risk_level="high",
-        )
+        return {
+            "status": "error",
+            "message": f"Unknown vendor_id: {vendor_id}",
+            "compliance_flag": False,
+            "contract_status": "unknown",
+            "risk_level": "high",
+        }
 
     compliance_flag = bool(vendor.get("compliance_flag", False))
     contract_status = str(vendor.get("contract_status", "none"))
@@ -73,13 +60,11 @@ def assess_risk(vendor_id: str) -> dict[str, object]:
 
     if risk_level not in _ALLOWED_RISK_LEVELS:
         return {
-            **_error_result(
-                "Risk computation failed: invalid risk level",
-                "validation_error",
-                risk_level="critical",
-            ),
+            "status": "error",
+            "message": "Risk computation failed: invalid risk level",
             "compliance_flag": compliance_flag,
             "contract_status": contract_status,
+            "risk_level": "critical",
         }
 
     return {

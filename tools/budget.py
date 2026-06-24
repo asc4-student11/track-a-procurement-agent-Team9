@@ -2,20 +2,7 @@
 
 from __future__ import annotations
 
-from data import loader
-
-
-def _error_result(message: str, error_type: str) -> dict[str, object]:
-    """Return a consistent typed error payload for budget failures."""
-    return {
-        "status": "error",
-        "error_type": error_type,
-        "tool": "check_budget",
-        "message": message,
-        "within_budget": False,
-        "remaining_budget": 0.0,
-        "overage": 0.0,
-    }
+from data.loader import load_budgets
 
 
 def check_budget(cost_center_id: str, requested_amount: float) -> dict[str, object]:
@@ -37,35 +24,37 @@ def check_budget(cost_center_id: str, requested_amount: float) -> dict[str, obje
         - ``overage``: Positive over-budget amount in USD, else ``0.0``.
     """
     if requested_amount <= 0:
-        return _error_result(
-            "requested_amount must be greater than zero",
-            "validation_error",
-        )
+        return {
+            "status": "error",
+            "message": "requested_amount must be greater than zero",
+            "within_budget": False,
+            "remaining_budget": 0.0,
+            "overage": 0.0,
+        }
 
     try:
-        budgets = loader.load_budgets()
+        budgets = load_budgets()
     except FileNotFoundError as exc:
-        return _error_result(f"Budget data unavailable: {exc}", "file_not_found")
-    except KeyError as exc:
-        return _error_result(f"Budget data missing expected field: {exc}", "key_error")
-    except Exception as exc:  # pragma: no cover - defensive guardrail
-        return _error_result(f"Unexpected budget data error: {exc}", "unexpected_error")
+        return {
+            "status": "error",
+            "message": f"Budget data unavailable: {exc}",
+            "within_budget": False,
+            "remaining_budget": 0.0,
+            "overage": 0.0,
+        }
 
     record = next((item for item in budgets if item.get("cost_center_id") == cost_center_id), None)
 
     if record is None:
         return {
-            **_error_result(f"Unknown cost center: {cost_center_id}", "validation_error"),
+            "status": "error",
+            "message": f"Unknown cost center: {cost_center_id}",
+            "within_budget": False,
+            "remaining_budget": 0.0,
             "overage": round(float(requested_amount), 2),
         }
 
-    try:
-        remaining_budget = float(record["remaining"])
-    except KeyError as exc:
-        return _error_result(f"Budget record missing expected field: {exc}", "key_error")
-    except Exception as exc:  # pragma: no cover - defensive guardrail
-        return _error_result(f"Unexpected budget record error: {exc}", "unexpected_error")
-
+    remaining_budget = float(record["remaining"])
     overage = max(0.0, float(requested_amount) - remaining_budget)
 
     return {
