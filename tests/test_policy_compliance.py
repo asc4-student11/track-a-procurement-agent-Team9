@@ -27,6 +27,8 @@ def test_pol004_catering_prohibition_req009_denied() -> None:
     assert result["status"] == "ok"
     violations = {item["policy_id"]: item for item in result["violations"]}
     assert "POL-004" in violations
+    assert "violated_rule" in violations["POL-004"]
+    assert violations["POL-004"]["violated_rule"]
     assert violations["POL-004"]["forced_decision"] == "deny"
 
 
@@ -62,4 +64,16 @@ def test_pol005_expired_contract_req007_denied() -> None:
     assert result["status"] == "ok"
     violations = {item["policy_id"]: item for item in result["violations"]}
     assert "POL-005" in violations
+    assert "violated_rule" in violations["POL-005"]
+    assert violations["POL-005"]["violated_rule"]
     assert violations["POL-005"]["forced_decision"] == "deny"
+
+
+def test_policy_compliance_no_violations_req001() -> None:
+    """REQ-001 should pass policy evaluation without violations."""
+    req001 = _request_by_id("REQ-001")
+
+    result = check_policy_compliance(req001)
+
+    assert result["status"] == "ok"
+    assert result["violations"] == []

@@ -20,7 +20,7 @@ def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
         - ``status``: ``"ok"`` when evaluation succeeds, otherwise ``"error"``.
         - ``message``: Human-readable summary of the evaluation outcome.
         - ``violations``: List of violation dictionaries where each entry includes:
-          ``policy_id``, ``rule_description``, and ``forced_decision``
+                    ``policy_id``, ``violated_rule``, and ``forced_decision``
           (``"deny"`` or ``"escalate"``).
     """
     try:
@@ -93,7 +93,7 @@ def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
         violations.append(
             {
                 "policy_id": "POL-001",
-                "rule_description": str(pol001["description"]),
+                "violated_rule": str(pol001["description"]),
                 "forced_decision": "deny",
             }
         )
@@ -108,7 +108,7 @@ def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
         violations.append(
             {
                 "policy_id": "POL-003",
-                "rule_description": str(pol003["description"]),
+                "violated_rule": str(pol003["description"]),
                 "forced_decision": "escalate",
             }
         )
@@ -119,7 +119,7 @@ def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
         violations.append(
             {
                 "policy_id": "POL-004",
-                "rule_description": str(pol004["description"]),
+                "violated_rule": str(pol004["description"]),
                 "forced_decision": "deny",
             }
         )
@@ -130,7 +130,7 @@ def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
         violations.append(
             {
                 "policy_id": "POL-005",
-                "rule_description": str(pol005["description"]),
+                "violated_rule": str(pol005["description"]),
                 "forced_decision": "deny",
             }
         )
@@ -141,7 +141,7 @@ def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
         violations.append(
             {
                 "policy_id": "POL-006",
-                "rule_description": str(pol006["description"]),
+                "violated_rule": str(pol006["description"]),
                 "forced_decision": "escalate",
             }
         )
@@ -156,7 +156,7 @@ def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
         violations.append(
             {
                 "policy_id": "POL-007",
-                "rule_description": str(pol007["description"]),
+                "violated_rule": str(pol007["description"]),
                 "forced_decision": "deny",
             }
         )
@@ -167,7 +167,7 @@ def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
         violations.append(
             {
                 "policy_id": "POL-008",
-                "rule_description": str(pol008["description"]),
+                "violated_rule": str(pol008["description"]),
                 "forced_decision": "deny",
             }
         )

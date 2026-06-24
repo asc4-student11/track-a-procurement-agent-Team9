@@ -47,7 +47,20 @@ def check_vendor_duplication(
             "forced_decision": None,
         }
 
-    vendors = load_vendors()
+    try:
+        vendors = load_vendors()
+    except FileNotFoundError as exc:
+        return {
+            "status": "error",
+            "message": f"Vendor data unavailable: {exc}",
+            "has_conflict": False,
+            "conflicting_vendor_ids": [],
+            "conflicting_contract_details": [],
+            "policy_id": None,
+            "threshold_applied": None,
+            "forced_decision": None,
+        }
+
     requested_vendor = next((v for v in vendors if v.get("vendor_id") == vendor_id), None)
     if requested_vendor is None:
         return {

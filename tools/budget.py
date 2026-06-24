@@ -32,7 +32,17 @@ def check_budget(cost_center_id: str, requested_amount: float) -> dict[str, obje
             "overage": 0.0,
         }
 
-    budgets = load_budgets()
+    try:
+        budgets = load_budgets()
+    except FileNotFoundError as exc:
+        return {
+            "status": "error",
+            "message": f"Budget data unavailable: {exc}",
+            "within_budget": False,
+            "remaining_budget": 0.0,
+            "overage": 0.0,
+        }
+
     record = next((item for item in budgets if item.get("cost_center_id") == cost_center_id), None)
 
     if record is None:
