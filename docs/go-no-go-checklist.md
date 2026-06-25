@@ -19,19 +19,19 @@
 
 ## Section 1: Requirements Documentation
 
-- [ ] Acceptance criteria in `README.md` have been reviewed and are current
-- [ ] All eight acceptance criteria are met (check each below)
+- [x] Acceptance criteria in `README.md` have been reviewed and are current
+- [x] All eight acceptance criteria are met (check each below)
 
 | Criterion | Met? | Notes |
 |-----------|------|-------|
-| Agent accepts `PurchaseRequest` and returns `ProcurementRecommendation` | | |
-| Decision is always `approve`, `deny`, or `escalate` | | |
-| Every recommendation includes a non-empty `rationale` | | |
-| All four checks are performed: budget, vendor duplication, policy, risk | | |
-| Tool errors are caught and reflected in output | | |
-| All three decision types are reachable with sample requests | | |
-| pytest suite passes: approve, deny, policy-deny, escalate cases | | |
-| `openspec validate` passes across complete spec suite | | |
+| Agent accepts `PurchaseRequest` and returns `ProcurementRecommendation` | Yes | Confirmed by `tests/test_models.py` and end-to-end agent tests. |
+| Decision is always `approve`, `deny`, or `escalate` | Yes | Enforced by `ProcurementRecommendation.decision` literal contract. |
+| Every recommendation includes a non-empty `rationale` | Yes | Validated by model validator and test coverage. |
+| All four checks are performed: budget, vendor duplication, policy, risk | Yes | Verified by `evaluate_request` orchestration and passing tests. |
+| Tool errors are caught and reflected in output | Yes | Verified by `tests/test_error_handling.py` (budget loader failure + unknown vendor). |
+| All three decision types are reachable with sample requests | Yes | `python run_all_requests.py` summary: approve=7, deny=4, escalate=4. |
+| pytest suite passes: approve, deny, policy-deny, escalate cases | Yes | `pytest tests/ -v` -> `37 passed, 1 warning in 4.95s`. |
+| `openspec validate` passes across complete spec suite | Yes | Output: `✓ change/add-procurement-intelligence-agent` and `Totals: 1 passed, 0 failed (1 items)`. |
 
 ---
 
@@ -58,8 +58,8 @@
 
 | Metric | Count |
 |--------|-------|
-| Total tests | 26 |
-| Passed | 26 |
+| Total tests | 37 |
+| Passed | 37 |
 | Failed | 0 |
 | Skipped | 0 |
 | Errors | 0 |
@@ -71,11 +71,7 @@
 **Test output summary** (paste last 10 lines or attach screenshot):
 
 ```
-========================= warnings summary =========================
-... PydanticAIDeprecationWarning: In v2.0, 'openai:' will resolve to OpenAI Responses API by default.
--- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-- generated xml file: docs/test-results.xml -
-================== 26 passed, 1 warning in 5.15s ===================
+======================= 37 passed, 1 warning in 4.95s ========================
 ```
 
 ---
@@ -87,7 +83,7 @@
 
 | ID | Description | Severity | Acceptance Rationale |
 |----|-------------|----------|---------------------|
-| | | | |
+| DEF-REQ015 | `REQ-015` expected outcome is `ambiguous` in data, while runtime contract only allows `approve`/`deny`/`escalate`, so output is `escalate`. | Low | Non-blocking training-data mismatch; behavior is documented in integration output and consistent with decision schema and escalation-first handling for ambiguity. |
 
 ---
 
@@ -115,11 +111,13 @@
 
 Mark exactly one:
 
-- [ ] **Go**: all acceptance criteria are met, peer review passed, no blocking defects
+- [x] **Go**: all acceptance criteria are met, peer review passed, no blocking defects
 - [ ] **No-Go**: one or more blocking items remain; list them below
 - [ ] **Conditional Go**: proceeding with conditions; conditions listed below
 
 **Decision Rationale** *(required, minimum two sentences)*:
+
+All acceptance criteria are satisfied based on current evidence: `python run_all_requests.py` demonstrates reachable approve/deny/escalate outcomes with zero deterministic mismatches across REQ-001 through REQ-014, `pytest tests/ -v` reports `37 passed`, and `openspec validate` reports `1 passed, 0 failed`. The peer review rating is Conditional Pass, and its sole Needs Attention item (author/reviewer separation) was formally accepted and documented for this training context, leaving no blocking defects for release.
 
 <!-- Explain why the team is confident in the Go/No-Go/Conditional-Go decision.
      Reference specific evidence: test results, peer review rating, acceptance criteria
@@ -127,8 +125,8 @@ Mark exactly one:
 
 **Conditions** *(if Conditional Go or No-Go, list all)*:
 
-1.
-2.
+1. None.
+2. None.
 
 ---
 
