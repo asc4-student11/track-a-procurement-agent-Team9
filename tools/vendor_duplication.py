@@ -70,6 +70,11 @@ def check_vendor_duplication(
     if requested_vendor is None:
         return _error_result(f"Unknown vendor_id: {vendor_id}", "validation_error")
 
+    requested_vendor_is_active_contracted = (
+        requested_vendor.get("category") == category
+        and requested_vendor.get("contract_status") == "active"
+    )
+
     conflicts = [
         vendor
         for vendor in vendors
@@ -88,7 +93,11 @@ def check_vendor_duplication(
         for v in conflicts
     ]
 
-    threshold_triggered = bool(conflicts) and float(total_amount) > POL001_THRESHOLD
+    threshold_triggered = (
+        bool(conflicts)
+        and float(total_amount) > POL001_THRESHOLD
+        and not requested_vendor_is_active_contracted
+    )
     if threshold_triggered:
         return {
             "status": "ok",
