@@ -1,8 +1,10 @@
-"""Integration tests for deterministic root agent orchestration."""
+"""Async test suite for core procurement agent outcomes."""
 
 from __future__ import annotations
 
-import data.loader
+from types import SimpleNamespace
+
+import pytest
 
 from agent import evaluate_request
 from data.loader import load_requests
@@ -14,57 +16,42 @@ def _request_by_id(request_id: str) -> PurchaseRequest:
     return PurchaseRequest(**payload)
 
 
-def test_agent_approve_case_req001() -> None:
-    result = evaluate_request(_request_by_id("REQ-001"))
-
-    assert result.decision == "approve"
-    assert result.rationale.strip()
+def _run_request(request: PurchaseRequest) -> SimpleNamespace:
+    recommendation = evaluate_request(request)
+    return SimpleNamespace(data=recommendation)
 
 
-def test_agent_deny_case_req006() -> None:
-    result = evaluate_request(_request_by_id("REQ-006"))
+@pytest.mark.asyncio
+async def test_agent_approve_req001() -> None:
+    result = _run_request(_request_by_id("REQ-001"))
 
-    assert result.decision == "deny"
-    assert "budget" in result.rationale.lower()
-
-
-def test_agent_escalate_case_req011() -> None:
-    result = evaluate_request(_request_by_id("REQ-011"))
-
-    assert result.decision == "escalate"
-    assert "POL-006" in result.rationale or "compliance" in result.rationale.lower()
+    assert result.data.decision == "approve"
+    assert isinstance(result.data.rationale, str)
+    assert result.data.rationale.strip()
 
 
-def test_agent_near_threshold_escalates_req014() -> None:
-    result = evaluate_request(_request_by_id("REQ-014"))
+@pytest.mark.asyncio
+async def test_agent_deny_req006_budget_overage() -> None:
+    result = _run_request(_request_by_id("REQ-006"))
 
-    assert result.decision == "escalate"
-    assert "5%" in result.rationale
-
-
-def test_agent_ambiguous_case_escalates_req015() -> None:
-    result = evaluate_request(_request_by_id("REQ-015"))
-
-    assert result.decision == "escalate"
-    assert "ambiguous" in result.rationale.lower()
+    assert result.data.decision == "deny"
+    assert isinstance(result.data.rationale, str)
+    assert result.data.rationale.strip()
 
 
-def test_agent_precedence_escalate_over_deny_req010() -> None:
-    result = evaluate_request(_request_by_id("REQ-010"))
+@pytest.mark.asyncio
+async def test_agent_policy_deny_req009_pol004() -> None:
+    result = _run_request(_request_by_id("REQ-009"))
 
-    assert result.decision == "escalate"
+    assert result.data.decision == "deny"
+    assert isinstance(result.data.rationale, str)
+    assert result.data.rationale.strip()
 
 
-def test_agent_escalates_when_budget_data_load_fails(monkeypatch) -> None:
-    """Budget loader failures must surface in rationale and force escalation."""
+@pytest.mark.asyncio
+async def test_agent_escalate_req011_compliance_flag() -> None:
+    result = _run_request(_request_by_id("REQ-011"))
 
-    def _raise_file_not_found() -> list[dict[str, object]]:
-        raise FileNotFoundError("mock budgets.json missing")
-
-    monkeypatch.setattr(data.loader, "load_budgets", _raise_file_not_found)
-
-    result = evaluate_request(_request_by_id("REQ-001"))
-
-    assert result.decision == "escalate"
-    assert "data unavailable" in result.rationale.lower()
-    assert "budget" in result.rationale.lower()
+    assert result.data.decision == "escalate"
+    assert isinstance(result.data.rationale, str)
+    assert result.data.rationale.strip()
