@@ -55,3 +55,24 @@ async def test_agent_escalate_req011_compliance_flag() -> None:
     assert result.data.decision == "escalate"
     assert isinstance(result.data.rationale, str)
     assert result.data.rationale.strip()
+
+
+@pytest.mark.parametrize(
+    "request_id",
+    [
+        "REQ-006",
+        "REQ-007",
+        "REQ-008",
+        "REQ-009",
+        "REQ-010",
+        "REQ-011",
+        "REQ-001",
+        "REQ-002",
+        "REQ-003",
+    ],
+)
+def test_agent_expected_outcome_matches_deterministic_samples(request_id: str) -> None:
+    request = _request_by_id(request_id)
+    result = _run_request(request)
+
+    assert result.data.decision == request.expected_outcome
