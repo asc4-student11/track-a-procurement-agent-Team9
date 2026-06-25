@@ -3,8 +3,8 @@
 **Control**: ITC.013 Backout Plan
 **Component**: Procurement and Vendor Intelligence Agent (Track A Capstone)
 **Repository**: [GitLab repository URL]
-**Last Updated**: [fill in before Session 4 peer review]
-**Prepared By**: [team name]
+**Last Updated**: 2026-06-25
+**Prepared By**: Team 9
 
 ---
 
@@ -15,10 +15,10 @@ and the test suite is passing.
 
 | Field | Value |
 |-------|-------|
-| Last stable commit hash | [run: `git log --oneline -1`] |
-| Last stable tag / version | [fill in if tagged; otherwise use commit hash] |
-| Date of last stable state | |
-| Verified by | |
+| Last stable commit hash | 6903ded |
+| Last stable tag / version | 6903ded |
+| Date of last stable state | 2026-06-25 |
+| Verified by | Vinod Kambar |
 
 ---
 
@@ -129,9 +129,9 @@ pipeline, list the consumers here and notify them before reverting:
 
 | Role | Name | Contact |
 |------|------|---------|
-| Release Manager / Decision Maker | | |
-| Technical Lead | | |
-| Instructor / Supervisor | | |
+| Release Manager / Decision Maker | Vinod Kambar | asc4-student50@labs.webagesolutions.com |
+| Technical Lead | Mahesh Sanampudi | asc4-student21@labs.webagesolutions.com |
+| Instructor / Supervisor | Kalishabee | asc4-student11@labs.webagesolutions.com |
 
 ---
 
